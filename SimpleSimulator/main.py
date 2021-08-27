@@ -81,3 +81,64 @@ if __name__ == "__main__":
             cycle_number += [cycle_count]
             register_value[7] = 0
             print_register_state()
+        elif binary[:5] == "00101":
+            binary_file[int(binary[8:], 2)] = format(register_value[int(binary[5:8], 2)], '016b')
+            graph_plotter += [int(binary[8:], 2)]
+            cycle_number += [cycle_count]
+            register_value[7] = 0
+            print_register_state()
+
+        elif binary[:5] == "00110":
+            reg1 = int(binary[7:10], 2)
+            reg2 = int(binary[10:13], 2)
+            reg3 = int(binary[13:], 2)
+            register_value[reg1] = register_value[reg2] * register_value[reg3]
+            register_value[7] = 0
+
+            if register_value[reg1] > 65535:
+                temp = bin(register_value[reg1])[2:]
+                temp = temp[-16:]
+                register_value[7] = 8
+                register_value[reg1] = int(temp, 2)
+            print_register_state()
+
+        elif binary[:5] == "00111":
+            reg3 = int(binary[10:13], 2)
+            reg4 = int(binary[13:], 2)
+            register_value[0] = (register_value[reg3]) // (register_value[reg4])
+            register_value[1] = (register_value[reg3]) % (register_value[reg4])
+            register_value[7] = 0
+            print_register_state()
+
+        elif binary[:5] == "01000":
+            temp = "0"*int(binary[8:], 2) + format(int(bin(register_value[int(binary[5:8], 2)])[2:], 2), '016b')
+            if len(temp) > 16:
+                temp = temp[:16]
+            register_value[int(binary[5:8], 2)] = int(temp, 2)
+            register_value[7] = 0
+            print_register_state()
+
+        elif binary[:5] == "01001":
+            temp = bin(register_value[int(binary[5:8], 2)])[2:] + "0"*int(binary[8:], 2)
+            if len(temp) > 16:
+                temp = temp[-16:]
+            register_value[int(binary[5:8], 2)] = int(temp, 2)
+            register_value[7] = 0
+            print_register_state()
+
+        elif binary[:5] == "01010":
+            register_value[7] = 0
+            reg1 = int(binary[7:10], 2)
+            reg2 = int(binary[10:13], 2)
+            reg3 = int(binary[13:], 2)
+            register_value[reg1] = register_value[reg2] ^ register_value[reg3]
+            print_register_state()
+
+        elif binary[:5] == "01011":
+            register_value[7] = 0
+            reg1 = int(binary[7:10], 2)
+            reg2 = int(binary[10:13], 2)
+            reg3 = int(binary[13:], 2)
+            register_value[reg1] = register_value[reg2] | register_value[reg3]
+            print_register_state()
+
