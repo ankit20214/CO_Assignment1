@@ -52,7 +52,6 @@ def assembly_to_binary(assembly_code):
     for i in range(len(assembly_code)):
         bin_out = ''
         assembly_line_i = assembly_code[i]
-        # print(assembly_line_i)
         if assembly_line_i[0] == 'var':
             continue
         if assembly_line_i[0][-1] == ':':
@@ -63,11 +62,8 @@ def assembly_to_binary(assembly_code):
                     assembly_line_i[0] = 'mov1'
                 else:
                     assembly_line_i[0] = 'mov2'
-            # print(assembly_line_i[0])
             bin_out += opcodes[assembly_line_i[0]]
             bin_out += unused_bits[opcodes_type[assembly_line_i[0]]]
-            # print(bin_out)
-            # print(opcodes_type[assembly_line_i[0]])
             if opcodes_type[assembly_line_i[0]] == 'A':
                 bin_out += registers[assembly_line_i[1]] + registers[assembly_line_i[2]] + registers[assembly_line_i[3]]
             if opcodes_type[assembly_line_i[0]] == 'B':
@@ -80,7 +76,6 @@ def assembly_to_binary(assembly_code):
                 bin_out += label[assembly_line_i[1]]
             if opcodes_type[assembly_line_i[0]] == 'F':
                 bin_out += ''
-            # print(bin_out)
             binary_code += [bin_out]
     return binary_code
 
@@ -172,7 +167,6 @@ def typocheck(lst):
                       "and","not","cmp","jmp","jlt","jgt","je","hlt","var"]: # if first word doesnt match any instruction
             return False
         else:
-            # print(Type(lst) ,lst)
             if Type(lst) == "A":
                 if(len(lst)==4):
                     if lst[1] in registers.keys() and lst[2] in registers.keys() and lst[3] in registers.keys():
@@ -250,7 +244,6 @@ def undeflabelcheck(lst):
         return True
 
 def illflagcheck(lst):
-    # buggy AF
     if 'FLAGS' in lst and len(lst) >= 2:
         if lst[0] != 'mov' or lst.index('FLAGS') != 2:
             return False
@@ -291,7 +284,6 @@ def mislabelvar(lst):
 
 def errorcheck(lst):
     global linenum,error_hai_kya
-    # linenum += 1
     check1 = typocheck(lst)  # typo check
     check2 = undefvarcheck(lst)  # undefined variable check
     check3 = undeflabelcheck(lst)  # undefined label check
@@ -316,6 +308,5 @@ def errorcheck(lst):
         print("ERROR: Wrong syntax used for instructions at line " + str(linenum + 1))
 
     if not(check1 and check2 and check3 and check4 and check5 and check6 and check10):
-       # print('here')
         error_hai_kya = True
            
