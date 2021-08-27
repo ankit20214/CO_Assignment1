@@ -28,3 +28,110 @@ register_names = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6']
 error_hai_kya = False
 var_error = {}
 global_input_line = 0
+def check_label_and_variable_naming_convention(varlabel):
+    # real_line_count : program counter ,i.e. real lines of code which use up memory
+    # vars is a dictionary of variables with keys as variable names and values as NONE initially
+    if varlabel in opcodes_type.keys() or varlabel in registers.keys():
+        return False
+
+    for j in range(len(varlabel)):
+        if not (varlabel[j].isalnum()):
+            if varlabel[j] != '_':
+                return False
+    return True
+
+def allocate_memory_to_var(real_line_count, vars):
+    for allocate in vars.keys():
+        bin_8bit_num = format(real_line_count, '#010b')
+        vars[allocate] = bin_8bit_num[2:]
+        real_line_count += 1
+    return vars
+
+def assembly_to_binary(assembly_code):
+    binary_code = []
+    for i in range(len(assembly_code)):
+        bin_out = ''
+        assembly_line_i = assembly_code[i]
+        # print(assembly_line_i)
+        if assembly_line_i[0] == 'var':
+            continue
+        if assembly_line_i[0][-1] == ':':
+            assembly_line_i = assembly_line_i[1:]
+        if assembly_line_i[0] in opcodes.keys() or assembly_line_i[0] == 'mov':
+            if (assembly_line_i[0] == 'mov'):
+                if (assembly_line_i[2][1:].isdigit() and assembly_line_i[2][0] == '$'):
+                    assembly_line_i[0] = 'mov1'
+                else:
+                    assembly_line_i[0] = 'mov2'
+            # print(assembly_line_i[0])
+            bin_out += opcodes[assembly_line_i[0]]
+            bin_out += unused_bits[opcodes_type[assembly_line_i[0]]]
+            # print(bin_out)
+            # print(opcodes_type[assembly_line_i[0]])
+            if opcodes_type[assembly_line_i[0]] == 'A':
+                bin_out += registers[assembly_line_i[1]] + registers[assembly_line_i[2]] + registers[assembly_line_i[3]]
+            if opcodes_type[assembly_line_i[0]] == 'B':
+                bin_out += registers[assembly_line_i[1]] + format(int(assembly_line_i[2][1:]), '#010b')[2:]
+            if opcodes_type[assembly_line_i[0]] == 'C':
+                bin_out += registers[assembly_line_i[1]] + registers[assembly_line_i[2]]
+            if opcodes_type[assembly_line_i[0]] == 'D':
+                bin_out += registers[assembly_line_i[1]] + vars[assembly_line_i[2]]
+            if opcodes_type[assembly_line_i[0]] == 'E':
+                bin_out += label[assembly_line_i[1]]
+            if opcodes_type[assembly_line_i[0]] == 'F':
+                bin_out += ''
+            # print(bin_out)
+            binary_code += [bin_out]
+    return binary_code
+
+def check_syntax(lst):  # checks syntactical errors ,i.e if a command is in its correct fomrat
+    if len(lst) != 0:
+        if lst[0] == 'mov':  # special check for 'mov' as it has two types
+            if (len(lst) == 3):  # mov instruction should be of len 3
+                return True
+            else:
+                return False
+        elif lst[0] == 'mov1' or lst[0] == 'mov2':
+            return True
+        elif lst[0] in opcodes.keys():  # other instructions except mov
+            if opcodes_type[lst[0]] == 'A':  # if type A ,length should be 4 followed by 3 valid register names
+                if len(lst) == 4:
+                    return True
+                else:
+                    return False
+            elif opcodes_type[lst[0]] == 'B':  # if type B, len =3 followed by register and imm value
+                if len(lst) == 3:
+                    if lst[2][0] != "$":
+                        return False
+                    else:
+                        return True
+                else:
+                    return False
+            elif opcodes_type[lst[0]] == 'C':  # if type C ,len 3 and 2 valid register names
+                if len(lst) == 3:
+                    return True
+                else:
+                    return False
+            elif opcodes_type[lst[0]] == 'D':  # if type D ,len 3, register and label name
+                if len(lst) == 3:
+                    return True
+                else:
+                    return False
+            elif opcodes_type[lst[0]] == 'E':  # type E len 2,command and  label name
+                if len(lst) == 2:
+                    return True
+                else:
+                    return False
+            elif opcodes_type[lst[0]] == 'F':  # halt statement
+                if len(lst) == 1:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return True
+    else:
+        # modified statement
+        return False
+
