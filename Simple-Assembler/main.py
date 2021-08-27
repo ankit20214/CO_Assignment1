@@ -135,3 +135,187 @@ def check_syntax(lst):  # checks syntactical errors ,i.e if a command is in its 
         # modified statement
         return False
 
+def Type(lst):
+    # to return type of instruction
+    if len(lst) == 0: # if its an only label line return Z
+        return "Z"
+    if lst[0] in ["add","sub","mul","xor","or","and"]:
+        return "A"
+    elif lst[0] in ["ld","st"]:
+        return "D"
+    elif lst[0] in ["jmp","jlt","jgt","je"]:
+        return "E"
+    elif lst[0] == "hlt":
+        return "F"
+    elif lst[0] in ["rs","ls"]:
+        return "B"
+    elif lst[0] in ["not","cmp","div"]:
+        return "C"
+    elif lst[0] == "mov": # special checks for mov
+        if len(lst) >= 3:
+            if lst[2][0] == '$':
+                return "B"
+            elif lst[2][0] == "R" or lst[2] == "FLAGS":
+                return "C"
+            else:
+                return "Z"
+        else:
+            return "Z"
+    else:
+        return "Z"
+
+def typocheck(lst):
+    if len(lst) == 0: #if length is 0 means without the label there is no instruction hence shoud fail the check which will prevent the counter+1
+        return True
+    else:
+        if lst[0] not in ["add","sub","mov","ld","st","mul","div","rs","ls","xor","or",
+                      "and","not","cmp","jmp","jlt","jgt","je","hlt","var"]: # if first word doesnt match any instruction
+            return False
+        else:
+            # print(Type(lst) ,lst)
+            if Type(lst) == "A":
+                if(len(lst)==4):
+                    if lst[1] in registers.keys() and lst[2] in registers.keys() and lst[3] in registers.keys():
+                        return True
+                    else:
+                        return False
+                else:
+                    return True
+            elif Type(lst) == "B":
+                if len(lst) == 3:
+                    if lst[1] in registers.keys(): # if 2nd word doesnt match any flag
+                        return True
+                    else:
+                        return False
+
+                else:
+                    return True
+            elif Type(lst) == "C":
+
+                if len(lst) == 3:
+                    if lst[1] in registers.keys() and lst[2] in registers.keys():
+                        return True
+                    else:
+                        return False
+                else:
+                    return True
+
+            elif Type(lst) == "D":
+                if len(lst)==3:
+                    if lst[1] in registers.keys():
+                        return True
+                    else:
+                        return False
+                else:
+                    return False
+            elif Type(lst) == "E":
+                # the mem_addr is nothing but label and label checking is done with undeflabelcheck
+                return True
+            elif Type(lst) == "F":
+                return True
+            elif Type(lst) == 'Z':
+                if (lst[0]== 'mov'):
+                    if(len(lst)==3):
+                         if lst[2][0] == "$":
+                             return True
+                         elif lst[2] in registers.keys():
+                             return True
+                         else:
+                             return False
+
+                    else:
+                        return True
+                else:
+                    return False
+            else:
+                return False
+
+def undefvarcheck(lst):
+    if Type(lst) == "D" and len(lst) == 3:
+        if lst[2] not in vars.keys():  # check to see if var dict has associated key or not
+            return False
+        return True
+    else:
+        return True
+
+def undeflabelcheck(lst):
+    if Type(lst) == "E" and len(lst) == 2:
+        if lst[0] != "var":
+            if lst[1] not in label.keys():  # check to see if label dict has associated key or not
+                return False
+            return True
+        else:
+            return True
+    else:
+        return True
+
+def illflagcheck(lst):
+    # buggy AF
+    if 'FLAGS' in lst and len(lst) >= 2:
+        if lst[0] != 'mov' or lst.index('FLAGS') != 2:
+            return False
+        else:
+            return True
+    else:
+        return True
+
+def illvalcheck(lst):
+    if Type(lst) == "B" and len(lst) == 3:
+        if(lst[2][0] != "$"):
+            return True
+        if(lst[2][1:].isdigit() and lst[2][0]=='$'):
+            if int(lst[2][1:]) < 0 or int(lst[2][1:]) > 255:  # if 3rd word (without the $ sign) not in between 0 and 255
+                return False
+            return True
+        else:
+            return False
+    else:
+        return True
+
+def mislabelvar(lst):
+    # if type is E then check if the 2nd word is in var or not
+    if Type(lst) == "E" and len(lst) == 2:
+        if lst[1] in vars.keys() and check_label_and_variable_naming_convention(lst[1]):
+            ret = False
+        else:
+            ret = True
+    # if type is D then check if 3rd word is in label or not
+    elif Type(lst) == "D" and len(lst) == 3:
+        if lst[2] in label.keys() and check_label_and_variable_naming_convention(lst[2]):
+            ret = False
+        else:
+            ret = True
+    else:
+        ret = True
+    return ret
+
+def errorcheck(lst):
+    global linenum,error_hai_kya
+    # linenum += 1
+    check1 = typocheck(lst)  # typo check
+    check2 = undefvarcheck(lst)  # undefined variable check
+    check3 = undeflabelcheck(lst)  # undefined label check
+    check4 = illflagcheck(lst)  # illegal flag check
+    check5 = illvalcheck(lst)  # illegal immediate value check
+    check6 = mislabelvar(lst)  # mis label/variable check
+    check10 = check_syntax(lst)
+    global counter
+    if not check1:
+        print("ERROR: Typos in instruction name or register name at line " + str(linenum + 1))
+    if not check2:
+        print("ERROR: Use of undefined variables at line " + str(linenum + 1))
+    if not check3:
+        print("ERROR: Use of undefined labels at line " + str(linenum + 1))
+    if not check4:
+        print("ERROR: Illegal use of FLAGS register at line " + str(linenum + 1))
+    if not check5:
+        print("ERROR: Illegal Immediate values (less than 0 or more than 255 or non-numeric) at line " + str(linenum + 1))
+    if not check6:
+        print("ERROR: Misuse of labels as variables or vice-versa at line " + str(linenum + 1))
+    if not check10:
+        print("ERROR: Wrong syntax used for instructions at line " + str(linenum + 1))
+
+    if not(check1 and check2 and check3 and check4 and check5 and check6 and check10):
+       # print('here')
+        error_hai_kya = True
+           
