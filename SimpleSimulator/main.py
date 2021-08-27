@@ -141,4 +141,75 @@ if __name__ == "__main__":
             reg3 = int(binary[13:], 2)
             register_value[reg1] = register_value[reg2] | register_value[reg3]
             print_register_state()
+        elif binary[:5] == "01100":
+            register_value[7] = 0
+            reg1 = int(binary[7:10], 2)
+            reg2 = int(binary[10:13], 2)
+            reg3 = int(binary[13:], 2)
+            register_value[reg1] = register_value[reg2] & register_value[reg3]
+            print_register_state()
+
+        elif binary[:5] == "01101":
+            register_value[7] = 0
+            reg1 = int(binary[10:13], 2)
+            reg2 = int(binary[13:], 2)
+            register_value[reg1] = 65535 - register_value[reg2]
+            print_register_state()
+
+        elif binary[:5] == "01110":
+            reg1 = int(binary[10:13], 2)
+            reg2 = int(binary[13:], 2)
+            if register_value[reg1] == register_value[reg2]:
+                register_value[7] = 1
+            elif register_value[reg1] > register_value[reg2]:
+                register_value[7] = 2
+            else:
+                register_value[7] = 4
+            print_register_state()
+
+        elif binary[:5] == "01111":
+            temp_mem_add = binary[8:]
+            # check here
+            register_value[7] = 0
+            print_register_state()
+            program_counter = int(temp_mem_add, 2) - 1
+
+        elif binary[:5] == "10000":
+            if register_value[7] == 4:
+                temp_mem_add = binary[8:]
+                register_value[7] = 0
+                print_register_state()
+                program_counter = int(temp_mem_add, 2) - 1
+            else:
+                register_value[7] = 0
+                print_register_state()
+
+        elif binary[:5] == "10001":
+            temp_mem_add = binary[8:]
+            if register_value[7] == 2:
+                register_value[7] = 0
+                print_register_state()
+                program_counter = int(temp_mem_add, 2) - 1
+            else:
+                register_value[7] = 0
+                print_register_state()
+
+        elif binary[:5] == "10010":
+            temp_mem_add = binary[8:]
+            if register_value[7] == 1:
+                register_value[7] = 0
+                print_register_state()
+                program_counter = int(temp_mem_add, 2) - 1
+            else:
+                register_value[7] = 0
+                print_register_state()
+
+        program_counter += 1
+        cycle_count += 1
+    memory_dump()
+    plt.scatter(cycle_number, graph_plotter)
+    plt.xlabel("Cycle Number")
+    plt.ylabel("Memory Address")
+    plt.title("Scatter Plot")
+    plt.show()
 
