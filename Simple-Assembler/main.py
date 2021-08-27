@@ -310,3 +310,113 @@ def errorcheck(lst):
     if not(check1 and check2 and check3 and check4 and check5 and check6 and check10):
         error_hai_kya = True
            
+if __name__ == '__main__':
+    while True:  # true because it will run infinitely until EOF is reached
+        try:
+            line = input()
+            line = line.strip()
+            global_input_line += 1
+            # trying input from stdin, might encounter EOF
+        except EOFError:
+            break  # if EOF occured means the file end has been reached hence exit
+        else:
+            # if EOF not occured means file still has content
+
+            if len(line.split()) == 0:
+                asm_with_spaces += [[]]
+            if len(line) != 0:
+                asm_with_spaces += [line.split()]  # asm with spaces
+                line = line.strip()  # strip in front and end white spaces
+                words = line.split()  # make a list out of the line
+                assembly_code += [words]
+                # valid asm
+                # print(words,len(words))
+                # print(words[0])
+                if words[0] == 'var' and len(words) == 2:
+                    if words[1] in vars.keys():
+                       var_error[words[1]] = global_input_line
+                    vars[words[1]] = None
+                elif words[0][-1] == ':' and check_label_and_variable_naming_convention(words[0][:-1]):
+                    label[words[0][:-1]] = None
+
+    for j in range(len(asm_with_spaces)-1, -1, -1):
+        if len(asm_with_spaces[j]) == 0:
+            del asm_with_spaces[j]
+        else:
+            break
+   # print(asm_with_spaces)
+    # parse 1
+    # print(vars)
+    # print(var_error)
+    if len(var_error) > 0:
+        error_hai_kya = True
+        for pav_bhaji in var_error.keys():
+            print("Multiple Variable declaration, Variable "+pav_bhaji+" declared again at line",var_error[pav_bhaji])
+    # print(label)
+    for i in range(len(asm_with_spaces)):
+        linenum = i
+        line_i = asm_with_spaces[i]
+        if (len(line_i)) != 0:
+            if line_i[0] == 'hlt' and len(line_i) == 1:
+                boolvar = False
+                real_lines_of_code += 1
+                halt = True
+                if i != len(asm_with_spaces) - 1:
+                    error_hai_kya = True
+                    print("ERROR <LINE NO.-" + str(i + 1) + "> HALT STATEMENT NOT BEING USED AS THE LAST COMMAND")
+            elif len(line_i) == 2 and line_i[1] == 'hlt': #label followed by halt "label: hlt"
+                boolvar = False
+                if line_i[0][-1] == ':' and check_label_and_variable_naming_convention(line_i[0][:-1]):
+                    real_lines_of_code += 1
+                    halt = True
+                    label[line_i[0][:-1]] = format(real_lines_of_code - 1, '#010b')[2:]
+                    if i != len(asm_with_spaces) - 1:
+                        error_hai_kya = True
+                        print("ERROR <LINE NO.-" + str(i + 1) + "> HALT STATEMENT NOT BEING USED AS THE LAST COMMAND")
+            elif line_i[0] == 'var':
+                if len(line_i) != 2:
+                    error_hai_kya = True
+                    print("ERROR: Wrong Syntax for Variable Declaration at Line "+str(i+1))
+                    continue
+                if not boolvar:
+                    error_hai_kya = True
+                    print("ERROR <LINE NO.-" + str(i + 1) + "> VARIABLE DECLARATION SHOULD BE AT THE BEGINNING OF THE PROGRAM")
+                elif not (check_label_and_variable_naming_convention(line_i[1])):
+                    error_hai_kya = True
+                    print("ERROR <LINE NO.-" + str(i + 1) + "> VARIABLE NAME DOESN'T FOLLOW NAMING CONVENTION")
+
+            elif line_i[0][-1] == ':':
+                boolvar = False
+                real_lines_of_code += 1
+                if not (check_label_and_variable_naming_convention(line_i[0][:-1])):
+                    error_hai_kya = True
+                    print("ERROR <LINE NO.-" + str(i + 1) + "> LABEL NAME DOESN'T FOLLOW NAMING CONVENTION")
+                else:
+                    if line_i[0][:-1] in vars:
+                        error_hai_kya = True
+                        print("ERROR: Misuse of labels as variables or vice-versa at line "+str(i+1))
+                    elif line_i[0][:-1] in label:
+                        if(label[line_i[0][:-1]] != None):
+                            error_hai_kya = True
+                            print("ERROR<LINE NO. "+str(i+1)+ ">: Same label cannot be used with different instructions")
+                        else:
+                            label[line_i[0][:-1]] = format(real_lines_of_code - 1, '#010b')[2:]
+                            errorcheck(line_i[1:])
+                    else:
+                        error_hai_kya = True
+                        print("ERROR <LINE NO. " + str(i + 1) + "Undeclared Label")
+            else:
+                boolvar = False
+                real_lines_of_code += 1
+                errorcheck(line_i)
+    # print(label)
+    if not halt:
+        print("ERROR: Missing valid HALT Statement")
+        error_hai_kya = True
+    # print("error?",error_hai_kya)
+    if not error_hai_kya:
+        vars = allocate_memory_to_var(real_lines_of_code,vars)
+        # print(vars)
+        answer = assembly_to_binary(assembly_code)
+        for a in answer:
+            print(a)
