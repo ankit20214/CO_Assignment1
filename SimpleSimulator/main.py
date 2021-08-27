@@ -1,3 +1,25 @@
+import matplotlib.pyplot as plt
+binary_file = []  # stores the binary code
+program_counter = 0  # program counter
+register_value = [0 for i in range(8)]  # stores values of registers
+graph_plotter = []
+cycle_count = 0  # counts number of cycles program has run
+cycle_number = []  # array that maintains cycle_count
+
+
+def print_register_state():
+    # print PC in 8 bit format
+    print(format(program_counter, '08b'), end = " ")
+    for i in register_value:
+        # print value of registers
+        print(format(i, '016b'), end =" ")
+    print()
+
+
+def memory_dump():
+    for i in binary_file:
+        print(i)
+
 if __name__ == "__main__":
     while True:  # true because it will run infinitely until EOF is reached
         try:
